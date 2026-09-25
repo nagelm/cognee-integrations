@@ -54,7 +54,7 @@ def test_graph_scope_is_filtered_to_project_and_shared_sets(
     common, calls = _env(suite, isolated_modules, monkeypatch, tmp_path, "project-fixed")
     _recall(common, ["graph"])
     payload = calls[-1][1]
-    assert payload["node_name"] == ["project-fixed", "global"]
+    assert payload["node_name"] == ["project-fixed", "global", "user_context"]
     assert payload["node_name_filter_operator"] == "OR"
 
 
@@ -113,7 +113,7 @@ def test_recall_only_variable_scopes_without_a_pinned_tag(
     )
     _recall(common, ["graph"])
     payload = calls[-1][1]
-    assert payload["node_name"] == ["project-fixed", "global"]
+    assert payload["node_name"] == ["project-fixed", "global", "user_context"]
     assert payload["node_name_filter_operator"] == "OR"
 
 
@@ -129,7 +129,7 @@ def test_pinned_tag_wins_over_the_recall_only_variable(
         COGNEE_RECALL_PROJECT_NODE_SET="fallback",
     )
     _recall(common, ["graph"])
-    assert calls[-1][1]["node_name"] == ["pinned", "global"]
+    assert calls[-1][1]["node_name"] == ["pinned", "global", "user_context"]
 
 
 @pytest.mark.parametrize("value", ["auto", "off", "0", "false", "no", "   "])
@@ -147,3 +147,13 @@ def test_recall_only_variable_ignores_non_names(
     )
     _recall(common, ["graph"])
     assert "node_name" not in calls[-1][1]
+
+
+def test_user_preferences_stay_recallable_in_every_project(
+    suite, isolated_modules, monkeypatch, tmp_path
+):
+    """cognee-remember files the user's own preferences under user_context; they
+    belong to the user, not one project, so the default shared sets keep them."""
+    common, calls = _env(suite, isolated_modules, monkeypatch, tmp_path, "project-fixed")
+    _recall(common, ["graph"])
+    assert "user_context" in calls[-1][1]["node_name"]
