@@ -55,3 +55,10 @@ def test_invalid_or_low_values_fall_back_to_the_stock_gate(suite, hook_module, m
     hook = hook_module(suite, "session-context-lookup.py")
     assert _run(hook, monkeypatch, "12345", COGNEE_RECALL_MIN_PROMPT_CHARS=raw) == ["12345"]
     assert _run(hook, monkeypatch, "1234", COGNEE_RECALL_MIN_PROMPT_CHARS=raw) == []
+
+
+def test_unset_floor_keeps_the_stock_gate_exactly(suite, hook_module, monkeypatch):
+    """The stock gate counts whitespace; unset, the new floor must not change that."""
+    hook = hook_module(suite, "session-context-lookup.py")
+    monkeypatch.delenv("COGNEE_RECALL_MIN_PROMPT_CHARS", raising=False)
+    assert _run(hook, monkeypatch, "1234 ") == ["1234 "]
