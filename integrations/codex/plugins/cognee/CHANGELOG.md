@@ -19,9 +19,11 @@ project adheres to [Semantic Versioning](https://semver.org/).
   boilerplate notes) or injected `<system-reminder>` blocks. The context lookup searched
   all of it, so the markup often outweighed the message. The first variable removes
   named tag blocks. The second is a regex whose groups, html-unescaped, become the
-  query when it matches. Unset, nothing changes; an unmatched prompt, an invalid
-  pattern or an empty extraction all fall back to the prompt as sent. The minimum
-  prompt length applies to the extracted query. Prompt capture is unaffected.
+  query when it matches. Unset, nothing changes. Without a usable match (no match,
+  an invalid pattern, only empty groups) recall searches the prompt as left after
+  stripping; a prompt made only of stripped blocks skips recall. The minimum prompt
+  length, including the default 5, applies to the extracted query. Prompt capture is
+  unaffected.
 - New event: `recall.lookup_query_extracted`.
 
 ## [1.7.5]

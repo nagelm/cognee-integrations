@@ -99,15 +99,38 @@ def test_strip_runs_before_the_pattern(suite, hook_module, monkeypatch):
 
 
 @pytest.mark.parametrize("pattern", ["(unclosed", "<message[^>]*>(\\s*)</message>"])
-def test_invalid_or_empty_extraction_falls_back_to_the_prompt(
-    suite, hook_module, monkeypatch, pattern
-):
+def test_invalid_pattern_or_empty_groups_search_the_text(suite, hook_module, monkeypatch, pattern):
     hook = hook_module(suite, "session-context-lookup.py")
     prompt = "<message>   </message> please check the logs"
     assert _run(hook, monkeypatch, prompt, COGNEE_RECALL_QUERY_PATTERN=pattern) == [prompt]
 
 
-def test_the_minimum_length_applies_to_the_extracted_query(suite, hook_module, monkeypatch):
+def test_invalid_pattern_still_searches_the_stripped_text(suite, hook_module, monkeypatch):
+    hook = hook_module(suite, "session-context-lookup.py")
+    prompt = "<system-reminder>noise</system-reminder>\nplease check the logs"
+    env = {
+        "COGNEE_RECALL_STRIP_TAGS": "system-reminder",
+        "COGNEE_RECALL_QUERY_PATTERN": "(unclosed",
+    }
+    assert _run(hook, monkeypatch, prompt, **env) == ["please check the logs"]
+
+
+def test_a_prompt_of_only_stripped_blocks_skips_recall(suite, hook_module, monkeypatch):
+    hook = hook_module(suite, "session-context-lookup.py")
+    prompt = "<system-reminder>\nA background task finished.\n</system-reminder>\n"
+    assert _run(hook, monkeypatch, prompt, COGNEE_RECALL_STRIP_TAGS="system-reminder") == []
+
+
+def test_the_default_floor_applies_to_the_extracted_query(suite, hook_module, monkeypatch):
+    hook = hook_module(suite, "session-context-lookup.py")
+    monkeypatch.delenv("COGNEE_RECALL_MIN_PROMPT_CHARS", raising=False)
+    short = WAKE.replace("why doesn&#39;t the deploy pick up the new env?", "ok")
+    assert _run(hook, monkeypatch, short, COGNEE_RECALL_QUERY_PATTERN=WAKE_PATTERN) == []
+    five = WAKE.replace("why doesn&#39;t the deploy pick up the new env?", "go on")
+    assert _run(hook, monkeypatch, five, COGNEE_RECALL_QUERY_PATTERN=WAKE_PATTERN) == ["go on"]
+
+
+def test_a_raised_floor_applies_to_the_extracted_query(suite, hook_module, monkeypatch):
     hook = hook_module(suite, "session-context-lookup.py")
     short = WAKE.replace("why doesn&#39;t the deploy pick up the new env?", "ok")
     env = {"COGNEE_RECALL_QUERY_PATTERN": WAKE_PATTERN, "COGNEE_RECALL_MIN_PROMPT_CHARS": "20"}
