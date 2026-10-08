@@ -10,6 +10,20 @@ is the cache key and semver record, bumped on each release, not the update trigg
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.6]
+
+### Added
+- **`COGNEE_RECALL_STRIP_TAGS` and `COGNEE_RECALL_QUERY_PATTERN`: recall on the part of
+  a wrapped prompt a person wrote.** Some hosts deliver prompts inside markup, such as
+  multi-agent harnesses with routing envelopes (ids, timestamps, trust attributes,
+  boilerplate notes) or injected `<system-reminder>` blocks. The context lookup searched
+  all of it, so the markup often outweighed the message. The first variable removes
+  named tag blocks. The second is a regex whose groups, html-unescaped, become the
+  query when it matches. Unset, nothing changes; an unmatched prompt, an invalid
+  pattern or an empty extraction all fall back to the prompt as sent. The minimum
+  prompt length applies to the extracted query. Prompt capture is unaffected.
+- New event: `recall.lookup_query_extracted`.
+
 ## [1.7.5]
 
 ### Changed
